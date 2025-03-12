@@ -13,6 +13,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const [dataProgrammations, setDataProgrammations] = useState<Programmation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tableDirection, setTableDirection] = useState<'periodes' | 'domaines'>('periodes');
 
   useEffect(() => {
     const token = import.meta.env.VITE_API_KEY;
@@ -40,8 +41,20 @@ export default function Home() {
   }
 
   return (
-    <div className="p-10">
-      <ProgrammationTable programmation={dataProgrammations} />
+    <div className="flex flex-col gap-3 p-10">
+      <div className="flex flex-row w-full justify-end gap-3">
+        <select>
+          Test
+        </select>
+        <button 
+            className="cursor-pointer bg-amber-50 text-amber-500 border-amber-500 border-1 px-3 py-2 rounded-full hover:text-amber-600 hover:border-amber-600 transition-all duration-300 ease-in-out self-end" 
+            onClick={() => {setTableDirection(tableDirection == 'periodes' ? 'domaines' : 'periodes')}}
+        >
+          Intervertir les colonnes/lignes
+        </button>
+      </div>
+       
+      <ProgrammationTable tableDirection={tableDirection} programmation={dataProgrammations} />
         
     </div>
   );

@@ -19,7 +19,7 @@ module.exports = {
         'bg-red-200',
     ],
     theme: {
-        extend: {},
+        contet: {},
     },
     plugins: [],
 };
