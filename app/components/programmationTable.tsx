@@ -1,181 +1,134 @@
 import { useState, useEffect } from "react";
-import type { Item, Periode, Programmation, Domaine } from "../models";
+import type { Domaine, Item, Periode, Programmation } from "../models";
 import Badge from "./ui/badge";
 import { formatDate } from "~/lib/format";
 
 const ProgrammationTable: React.FC<{ programmation: Programmation | null }> = ({ programmation }) => {
 
-    const [rowsPeriod, setRowsPeriod] = useState<{ periode: Periode; domaines: { [key: string]: Item[] } }[]>([]);
-    const [rowsDomains, setRowsDomains] = useState<{ domaine: Domaine; periodes: { [key: string]: Item[] } }[]>([]);
-    const [tableDirection, setTableDirection] = useState<string>('period');
+    const [rows, setRows] = useState<any>([]);
+    const [headers, setHeaders] = useState<any>([]);
+    const [tableDirection, setTableDirection] = useState<'periodes' | 'domaines'>('periodes');
 
     useEffect(() => {
-        processData(tableDirection);
-    }, [programmation]);
+        const organizedData = organizeDataForTable(programmation);
+        setRows(organizedData);
+    }, [programmation, tableDirection]);
 
-    const processData = (direction: string) => {
-        console.log(direction)
-        if(direction == 'period') {
-            const organizedData = organizeDataForTablePeriod(programmation);
-            setRowsPeriod(organizedData);
-        } else {
-            const organizedData = organizeDataForTableDomain(programmation);
-            setRowsDomains(organizedData);
+
+    function organizeDataForTable(programmationParameter: Programmation | null) {
+        if(!programmationParameter?.periodes || !programmationParameter.matieres) {
+            return [];
         }
-    }
+        const { periodes, matieres } = programmationParameter;
 
-    function organizeDataForTableDomain(programmationParameter: Programmation | null) {
-        if(programmationParameter?.periodes && programmationParameter.matieres) {
-            const { periodes, matieres } = programmationParameter;
         
-            // Créer un tableau pour les lignes (domaines)
-            const rows = matieres.flatMap((matiere) =>
-                matiere.domaines.map((domaine) => {
-                    // Créer un objet pour chaque domaine
-                    const row: { domaine: Domaine; periodes: { [key: string]: Item[] } } = {
-                        domaine,
-                        periodes: {},
-                    };
-        
-                    // Remplir les colonnes (périodes) pour ce domaine
-                    periodes.forEach((periode) => {
-                        // Filtrer les items pour cette période et ce domaine
-                        const items = domaine.items.filter((item) => item.periodeId === periode.id);
-                        row.periodes[periode.name] = items;
-                    });
-        
-                    return row;
-                })
+        if(tableDirection == 'periodes') {
+            // HEADERS
+            const tempHeaders = matieres.flatMap(matiere =>
+                matiere.domaines.map(domaine => ({
+                    id: domaine.id,
+                    name: domaine.name,
+                    cell: () => <th className={`bg-${domaine.color}`}>{domaine.name}</th>,
+                }))
             );
-        
-            return rows;
+            setHeaders(tempHeaders);
+
+            // ROWS
+            return periodes.map((periode: Periode) => ({
+                firstCell: () => (
+                    <td className="h-full flex flex-col justify-center items-center gap-2 w-[150px] relative">
+                        <div className={`w-full h-[20px] absolute top-0 bg-${periode.color}`}></div>
+                        <Badge className={`border-2 mt-3 border-${periode.color}`}>
+                            {periode.name}
+                        </Badge>
+                        <span className="text-gray-300 text-xs">
+                            {formatDate(periode.startDate)} - {formatDate(periode.endDate)}
+                        </span>
+                    </td>
+                ),
+                domaines: Object.fromEntries(
+                    matieres.flatMap(matiere =>
+                        matiere.domaines.map(domaine => [domaine.name, domaine.items.filter(item => item.periodeId === periode.id)])
+                    )
+                ),
+            }));
         } else {
-            return [];
+            // HEADERS
+            console.log(programmation?.periodes)
+            const tempHeaders = programmation?.periodes.map((periode) => ({
+                id: periode.id,
+                name: periode.name,
+                cell: () => (
+                    <th key={periode.id} className="">
+                        <div className="relative h-[100px] flex flex-col justify-center items-center gap-2">
+                            <div className={`w-full h-[10px] absolute top-0 bg-${periode.color}`}></div>
+                            <Badge className={`border-2 mt-3 border-${periode.color}`}>
+                                {periode.name}
+                            </Badge>
+                            <span className="text-gray-300 text-xs">
+                                {formatDate(periode.startDate)} - {formatDate(periode.endDate)}
+                            </span>
+                        </div>
+                    </th>
+                ),
+            }));
+            setHeaders(tempHeaders);
+
+            // ROWS
+            return matieres.flatMap(matiere =>
+                matiere.domaines.map(domaine => ({
+                    firstCell: () => <td className={`bg-${domaine.color}`}>{domaine.name}</td>,
+                    domaines: Object.fromEntries(
+                        periodes.map(periode => [
+                            periode.name,
+                            domaine.items.filter(item => item.periodeId === periode.id),
+                        ])
+                    ),
+                }))
+            );
         }
+        
+
+
+        
     }
 
 
-    function organizeDataForTablePeriod(programmationParameter: Programmation | null) {
-        if(programmationParameter?.periodes && programmationParameter.matieres) {
-            const { periodes, matieres } = programmationParameter;
-    
-            // Créer un tableau pour les lignes (périodes)
-            const rows = periodes.map((periode: Periode) => {
-                // Créer un objet pour chaque période
-                const row: { periode: Periode; domaines: { [key: string]: Item[] } } = {
-                    periode,
-                    domaines: {},
-                };
-        
-                // Remplir les colonnes (domaines) pour cette période
-                matieres.forEach((matiere) => {
-                    matiere.domaines.forEach((domaine) => {
-                        // Filtrer les items pour cette période et ce domaine
-                        const items = domaine.items.filter((item) => item.periodeId === periode.id);
-                        row.domaines[domaine.name] = items;
-                    });
-                });
-        
-                return row;
-            });
-        
-            return rows;
-        } else {
-            return [];
-        }
+    if (rows.length === 0) {
+        return <div>Chargement...</div>;
     }
 
 
-    
-    if(tableDirection == 'period') {
-        if (rowsPeriod.length === 0) {
-            return <div>Chargement... period</div>;
-        }
-    
-        const domaines = programmation?.matieres.flatMap((matiere) => matiere.domaines.map((domaine) => domaine.name));
-    
-        return (
-            <div>
-                <button onClick={() => {setTableDirection('domain'), processData('domain')}}>Inverser le tableau</button>
-                <table className="">
-                    <thead>
-                        <tr>
-                            <th className="w-[100px]"></th>
-                            {domaines?.map((domaine) => (
-                                <th key={domaine}>{domaine}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rowsPeriod.map((row) => (
-                            <tr key={row.periode.id}>
-                                <td className="h-full flex flex-col justify-center items-center gap-2 w-[150px]">
-                                    <Badge className={`border-2 border-${row.periode.color}`}>
-                                        {row.periode.name}
-                                    </Badge>
-                                    <span className="text-gray-300 text-xs">
-                                        {formatDate(row.periode.startDate)} - {formatDate(row.periode.endDate)}
-                                    </span>
-                                </td>
-                                {domaines?.map((domaine) => (
-                                    <td key={domaine} className="text-xs">
-                                        {row.domaines[domaine]?.map((item) => (
-                                            <div 
-                                                className="flex flex-col gap-1"
-                                                key={item.id} 
-                                                dangerouslySetInnerHTML={{ __html: item.value }} 
-                                            />
-                                        ))}
-                                    </td>
-                                ))}
-                            </tr>
+    return (
+        <div>
+            <button className="cursor-pointer" onClick={() => {setTableDirection(tableDirection == 'periodes' ? 'domaines' : 'periodes')}}>Inverser le tableau</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        {console.log(headers)}
+                        {headers?.map((header: any) => (
+                            header.cell()
                         ))}
-                    </tbody>
-                </table>
-            </div>
-            
-        )
-    } else {
-        if (rowsDomains.length === 0) {
-            return <div>Chargement... domain</div>;
-        }
-    
-        const periodes = programmation?.periodes.map((periode) => periode.name);
-    
-        return (
-            <div>
-                <button onClick={() => {setTableDirection('period'), processData('period')}}>Inverser le tableau</button>
-                <table className="">
-                    <thead>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row: any) => (
                         <tr>
-                            <th className="w-[100px]"></th>
-                            {periodes?.map((periode) => (
-                            <th key={periode}>{periode}</th>
-                        ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {rowsDomains.map((row) => (
-                        <tr key={row.domaine.id}>
-                            <td>{row.domaine.name}</td>
-                            {periodes?.map((periode) => (
-                                <td key={periode}>
-                                    {row.periodes[periode]?.map((item) => (
+                            {row.firstCell()}
+                            {headers?.map((header: any) => (
+                                <td key={header.id}>
+                                    {row.domaines[header.name]?.map((item: Item) => (
                                         <div key={item.id} dangerouslySetInnerHTML={{ __html: item.value }} />
                                     ))}
                                 </td>
                             ))}
                         </tr>
                     ))}
-                    </tbody>
-                </table>
-            </div>
-            
-        )
-    }
-
-
-    
+                </tbody>
+            </table>
+        </div>
+    )
 }
 
 export default ProgrammationTable;
