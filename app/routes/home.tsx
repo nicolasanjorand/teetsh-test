@@ -40,7 +40,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="p-10">
       <ProgrammationTable programmation={dataProgrammations} />
         
     </div>

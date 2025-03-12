@@ -13,3 +13,13 @@ body {
     color-scheme: dark;
   }
 }
+
+tr {
+  border: 1px solid lightgray;
+}
+
+td {
+  padding: 20px;
+}
+
+
