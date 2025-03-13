@@ -1,7 +1,7 @@
 import { useState, useEffect, type JSX } from "react";
 import type { Domaine, Item, Periode, Programmation } from "../models";
 import Badge from "./ui/badge";
-import { formatDate } from "~/lib/format";
+import { formatDate } from "../lib/format";
 
 interface Header {
     id: string,
@@ -10,8 +10,12 @@ interface Header {
     color: string,
 }
 
-const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableDirection: string }> = ({ programmation, tableDirection }) => {
+interface ProgrammationTableProps {
+    programmation: Programmation | null;
+    tableDirection: string;
+  }
 
+const ProgrammationTable: React.FC<ProgrammationTableProps> = ({ programmation, tableDirection }) => {    
     const [rows, setRows] = useState<any>([]);
     const [headers, setHeaders] = useState<Header[]>([]);
     const [activeColumn, setActiveColumn] = useState<string | null>(null);
@@ -158,7 +162,7 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
                     <tr>
                         {row.firstCell()}
                         {visibleHeaders?.map((header: any) => (
-                            <td className="text-xs" key={header.id}>
+                            <td data-testid={header.id} className="text-xs" key={header.id}>
                                 {row.domaines[header.name]?.map((item: Item) => (
                                     <div className="" key={item.id} dangerouslySetInnerHTML={{ __html: item.value }} />
                                 ))}

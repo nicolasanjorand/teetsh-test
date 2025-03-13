@@ -7,4 +7,5 @@ export interface Domaine {
     items: [Item],
     position: number,
     matiereId: string,
+    programmationId: string,
 }
