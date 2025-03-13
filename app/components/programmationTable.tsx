@@ -6,13 +6,22 @@ import { formatDate } from "~/lib/format";
 interface Header {
     id: string,
     name: string,
-    cell: JSX.Element
+    cell: JSX.Element,
+    color: string,
 }
 
 const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableDirection: string }> = ({ programmation, tableDirection }) => {
 
     const [rows, setRows] = useState<any>([]);
     const [headers, setHeaders] = useState<Header[]>([]);
+    const [activeColumn, setActiveColumn] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     useEffect(() => {
         setHeaders(organizeHeaders(programmation));
@@ -25,12 +34,12 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
             return [];
         }
         const { matieres } = programmationParameter;
-
         if(tableDirection == 'periodes') {
             return matieres.flatMap(matiere =>
                 matiere.domaines.map(domaine => ({
                     id: domaine.id,
                     name: domaine.name,
+                    color: domaine.color,
                     cell: <th className={`p-3 bg-${domaine.color}`}>{domaine.name}</th>,
                 }))
             );
@@ -38,6 +47,7 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
             return (programmation?.periodes || []).map((periode) => ({
                 id: periode.id,
                 name: periode.name,
+                color: periode.color,
                 cell: (
                     <th key={periode.id} className="">
                         <div className="relative h-[100px] flex flex-col justify-center items-center gap-2">
@@ -51,6 +61,11 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
                         </div>
                     </th>
                 ),
+                buttonCell: (
+                    <Badge className={`border-2 mt-3 border-${periode.color}`}>
+                                {periode.name}
+                            </Badge>
+                )
             }));
         }    
     }
@@ -66,7 +81,7 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
         if(tableDirection == 'periodes') {
             return periodes.map((periode: Periode) => ({
                 firstCell: () => (
-                    <td className="h-full flex flex-col justify-center items-center gap-2 w-[150px] relative">
+                    <td className="h-full flex flex-col justify-center items-center gap-2  md:w-[150px] relative">
                         <div className={`w-full h-[20px] absolute top-0 bg-${periode.color}`}></div>
                         <Badge className={`border-2 mt-3 border-${periode.color}`}>
                             {periode.name}
@@ -98,29 +113,54 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
     }
 
 
+    useEffect(() => {
+        if (isMobile && headers.length > 0) {
+            setActiveColumn(headers[0].id);
+        }
+    }, [isMobile, headers]);
+
+    const visibleHeaders = isMobile ? headers.filter(header => header.id === activeColumn) : headers;
+
+
+
     if (rows.length === 0) {
         return <div>Chargement...</div>;
     }
 
 
     return (
-        <table>
+        <div className="text-sm">
+            {isMobile && (
+                <div className="flex flex-wrap justify-center my-2 gap-2">
+                    {headers.map(header => {
+                        return (
+                            <button 
+                            key={header.id} 
+                            onClick={() => setActiveColumn(header.id)} 
+                            className={`rounded-md bg-${header.color} py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm cursor-pointer hover:font-bold ${activeColumn === header.id ? "font-bold scale-110" : "font-normal"} `}
+                            //className={`px-3 py-1 rounded ${activeColumn === header.id ? "bg-blue-500 text-white" : "bg-gray-300"}`}
+                        >
+                            {header.name}
+                        </button>
+                        )
+                    })}
+                </div>
+            )}
+            <table>
             <thead>
                 <tr>
                     <th></th>
-                    {headers?.map((header: Header) => (
-                        header.cell
-                    ))}
+                    {visibleHeaders.map((header) => header.cell)}
                 </tr>
             </thead>
             <tbody>
                 {rows.map((row: any) => (
                     <tr>
                         {row.firstCell()}
-                        {headers?.map((header: any) => (
-                            <td key={header.id}>
+                        {visibleHeaders?.map((header: any) => (
+                            <td className="text-xs" key={header.id}>
                                 {row.domaines[header.name]?.map((item: Item) => (
-                                    <div key={item.id} dangerouslySetInnerHTML={{ __html: item.value }} />
+                                    <div className="" key={item.id} dangerouslySetInnerHTML={{ __html: item.value }} />
                                 ))}
                             </td>
                         ))}
@@ -128,6 +168,7 @@ const ProgrammationTable: React.FC<{ programmation: Programmation | null, tableD
                 ))}
             </tbody>
         </table>
+        </div>
     )
 }
 

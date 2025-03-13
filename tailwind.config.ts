@@ -1,7 +1,9 @@
+import {heroui} from '@heroui/theme';
 module.exports = {
-    content: [
-        './src/**/*.{js,jsx,ts,tsx}',
-    ],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./node_modules/@heroui/theme/dist/components/(select|form|listbox|divider|popover|button|ripple|spinner|scroll-shadow).js"
+  ],
     safelist: [
         'border-lime-200',
         'border-lime-300',
@@ -21,5 +23,5 @@ module.exports = {
     theme: {
         contet: {},
     },
-    plugins: [],
+  plugins: [heroui()],
 };
