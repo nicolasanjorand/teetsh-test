@@ -44,7 +44,7 @@ const ProgrammationTable: React.FC<ProgrammationTableProps> = ({ programmation, 
                     id: domaine.id,
                     name: domaine.name,
                     color: domaine.color,
-                    cell: <th className={`p-3 bg-${domaine.color}`}>{domaine.name}</th>,
+                    cell: <th key={domaine.id} className={`p-3 bg-${domaine.color}`}>{domaine.name}</th>,
                 }))
             );
         } else {
@@ -67,8 +67,8 @@ const ProgrammationTable: React.FC<ProgrammationTableProps> = ({ programmation, 
                 ),
                 buttonCell: (
                     <Badge className={`border-2 mt-3 border-${periode.color}`}>
-                                {periode.name}
-                            </Badge>
+                        {periode.name}
+                    </Badge>
                 )
             }));
         }    
@@ -85,11 +85,9 @@ const ProgrammationTable: React.FC<ProgrammationTableProps> = ({ programmation, 
         if(tableDirection == 'periodes') {
             return periodes.map((periode: Periode) => ({
                 firstCell: () => (
-                    <td className="h-full flex flex-col justify-center items-center gap-2  md:w-[150px] relative">
+                    <td key={periode.id} className="h-full flex flex-col justify-center items-center gap-2 text-xs md:text-sm  md:w-[150px] relative">
                         <div className={`w-full h-[20px] absolute top-0 bg-${periode.color}`}></div>
-                        <Badge className={`border-2 mt-3 border-${periode.color}`}>
-                            {periode.name}
-                        </Badge>
+                        <span className="mt-3">{periode.name}</span>
                         <span className="text-gray-300 text-xs">
                             {formatDate(periode.startDate)} - {formatDate(periode.endDate)}
                         </span>
@@ -158,8 +156,8 @@ const ProgrammationTable: React.FC<ProgrammationTableProps> = ({ programmation, 
                 </tr>
             </thead>
             <tbody>
-                {rows.map((row: any) => (
-                    <tr>
+                {rows.map((row: any, index: number) => (
+                    <tr key={index}>
                         {row.firstCell()}
                         {visibleHeaders?.map((header: any) => (
                             <td data-testid={header.id} className="text-xs" key={header.id}>
