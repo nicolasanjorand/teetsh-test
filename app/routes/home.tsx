@@ -29,7 +29,7 @@ export default function Home() {
   useEffect(() => {
     const token = import.meta.env.VITE_API_KEY;
 
-    fetch('https://strapi.teetsh.com/api/programmations/10', {
+    fetch('https://strapi.teetsh.com/api/programmations/kktkr2tcpju1ukbvs2d2q24a', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -38,7 +38,7 @@ export default function Home() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setDataProgrammations(data.data.attributes);
+        setDataProgrammations(data.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -54,19 +54,18 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-3 p-5 md:p-10 ">
       <div className="flex flex-row w-full justify-end gap-3">
+        {/* SELECT NON FONCTIONNEL - A IMAGINER POUR UN PROFESSEUR QUI A PLUSIEURS NIVEAUX
+        */}
         <div className="text-xs md:text-sm">
-        <select
-          id="niveau"
-          name="niveau"
-          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          {niveaux.map((niveau) => (
-            <option key={niveau.key} value={niveau.key}>
-              {niveau.label}
-            </option>
-          ))}
-        </select>
-      </div>
+          <select
+            id="niveau"
+            name="niveau"
+            className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            {niveaux.map((niveau) => <option key={niveau.key} value={niveau.key}>{niveau.label}</option>)}
+          </select>
+        </div>
+        
         <button 
             className="cursor-pointer text-xs md:text-sm bg-amber-50 text-amber-500 border-amber-500 border-1 px-3 py-2 rounded-full hover:text-amber-600 hover:border-amber-600 transition-all duration-300 ease-in-out self-end" 
             onClick={() => {setTableDirection(tableDirection == 'periodes' ? 'domaines' : 'periodes')}}
